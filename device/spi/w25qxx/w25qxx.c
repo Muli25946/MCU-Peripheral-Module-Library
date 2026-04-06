@@ -9,6 +9,8 @@ static W25QXXErrorType W25QXX_SwapData(W25QXXObjectType *w25qxx,
                                        uint8_t *rxBuff, uint16_t rxLen);
 // 写使能
 static W25QXXErrorType W25QXX_WriteEnable(W25QXXObjectType *w25qxx);
+// 忙等待
+static W25QXXErrorType W25QXX_WaitBusy(W25QXXObjectType *w25qxx);
 
 /**
  * @brief 初始化W25QXX对象
@@ -99,31 +101,6 @@ W25QXXErrorType W25QXX_ReadData(W25QXXObjectType *w25qxx, uint32_t block,
   w25qxx->ChipSelect(W25QXX_CS_ENABLE);
   W25QXX_SwapData(w25qxx, cmd, 4, NULL, 0);
   W25QXX_SwapData(w25qxx, NULL, 0, dataBuff, count);
-  w25qxx->ChipSelect(W25QXX_CS_DISABLE);
-
-  return W25QXX_ERROR_NONE;
-}
-
-/**
- * @brief 等待芯片忙状态结束
- *
- * @param w25qxx w25qxx句柄
- * @return W25QXXErrorType 错误值返回
- */
-static W25QXXErrorType W25QXX_WaitBusy(W25QXXObjectType *w25qxx) {
-  uint8_t cmd = W25QXX_COMMAND_READ_STATUS_REG1;
-  uint8_t status = 0;
-  uint32_t timeout = 100000;
-
-  w25qxx->ChipSelect(W25QXX_CS_ENABLE);
-  W25QXX_SwapData(w25qxx, &cmd, 1, NULL, 0);
-  do {
-    W25QXX_SwapData(w25qxx, NULL, 0, &status, 1);
-    if (--timeout == 0) {
-      w25qxx->ChipSelect(W25QXX_CS_DISABLE);
-      return W25QXX_ERROR_TIMEOUT;
-    }
-  } while (status & 0x01);
   w25qxx->ChipSelect(W25QXX_CS_DISABLE);
 
   return W25QXX_ERROR_NONE;
@@ -248,4 +225,29 @@ static W25QXXErrorType W25QXX_WriteEnable(W25QXXObjectType *w25qxx) {
   w25qxx->ChipSelect(W25QXX_CS_DISABLE);
 
   return err;
+}
+
+/**
+ * @brief 等待芯片忙状态结束
+ *
+ * @param w25qxx w25qxx句柄
+ * @return W25QXXErrorType 错误值返回
+ */
+static W25QXXErrorType W25QXX_WaitBusy(W25QXXObjectType *w25qxx) {
+  uint8_t cmd = W25QXX_COMMAND_READ_STATUS_REG1;
+  uint8_t status = 0;
+  uint32_t timeout = 100000;
+
+  w25qxx->ChipSelect(W25QXX_CS_ENABLE);
+  W25QXX_SwapData(w25qxx, &cmd, 1, NULL, 0);
+  do {
+    W25QXX_SwapData(w25qxx, NULL, 0, &status, 1);
+    if (--timeout == 0) {
+      w25qxx->ChipSelect(W25QXX_CS_DISABLE);
+      return W25QXX_ERROR_TIMEOUT;
+    }
+  } while (status & 0x01);
+  w25qxx->ChipSelect(W25QXX_CS_DISABLE);
+
+  return W25QXX_ERROR_NONE;
 }
