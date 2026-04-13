@@ -2,7 +2,7 @@
  * @file w25qxx.h
  * @author Muli25946 (2687025869@qq.com)
  * @brief w25qxx系列SPI闪存驱动头文件，支持w25q64/w25q128型号
- * @version 0.1
+ * @version 0.2
  * @date 2026-04-06
  *
  * @copyright Copyright (c) 2026
@@ -53,13 +53,11 @@ typedef uint8_t (*W25QXX_SPISwap)(uint8_t *txBuff, uint8_t txLen,
 typedef uint8_t (*W25QXX_SPIChipSelect)(
     W25QXXCSEnableType
         status); // W25QXX的片选操作,硬件片选可忽略同时传入初始化参数NULL即可
-typedef void (*W25QXX_DelayMs)(uint32_t ms); // W25QXX的延时函数
 
 /*函数声明*/
 W25QXXErrorType W25QXX_ObjectInit(W25QXXObjectType *w25qxx,
                                   W25QXXModelType model, W25QXX_SPISwap swap,
-                                  W25QXX_SPIChipSelect chipselect,
-                                  W25QXX_DelayMs delay);
+                                  W25QXX_SPIChipSelect chipselec);
 void W25QXX_ReadID(W25QXXObjectType *w25qxx, uint8_t *id);
 W25QXXErrorType W25QXX_ReadData(W25QXXObjectType *w25qxx,
                                 uint32_t block, uint8_t sector,

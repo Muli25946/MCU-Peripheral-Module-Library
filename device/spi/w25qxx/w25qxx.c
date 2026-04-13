@@ -24,8 +24,7 @@ static W25QXXErrorType W25QXX_WaitBusy(W25QXXObjectType *w25qxx);
  */
 W25QXXErrorType W25QXX_ObjectInit(W25QXXObjectType *w25qxx,
                                   W25QXXModelType model, W25QXX_SPISwap swap,
-                                  W25QXX_SPIChipSelect chipselect,
-                                  W25QXX_DelayMs delay) {
+                                  W25QXX_SPIChipSelect chipselect) {
   /*检查所需函数是否存在*/
   if (w25qxx == NULL || swap == NULL || delay == NULL) {
     return W25QXX_ERROR_UNKNOWN;
