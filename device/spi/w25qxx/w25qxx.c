@@ -26,7 +26,7 @@ W25QXXErrorType W25QXX_ObjectInit(W25QXXObjectType *w25qxx,
                                   W25QXXModelType model, W25QXX_SPISwap swap,
                                   W25QXX_SPIChipSelect chipselect) {
   /*检查所需函数是否存在*/
-  if (w25qxx == NULL || swap == NULL || delay == NULL) {
+  if (w25qxx == NULL || swap == NULL ) {
     return W25QXX_ERROR_UNKNOWN;
   }
 
@@ -38,7 +38,6 @@ W25QXXErrorType W25QXX_ObjectInit(W25QXXObjectType *w25qxx,
   /*函数注入*/
   w25qxx->Swap = swap;
   w25qxx->ChipSelect = chipselect;
-  w25qxx->DelayMs = delay;
 
   /*属性参数写入*/
   w25qxx->model = model;
