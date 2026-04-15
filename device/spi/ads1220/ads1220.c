@@ -10,7 +10,8 @@ static ADS1220ErrorType ads1220_swap(ADS1220ObjectType *ads, uint8_t *txBuff,
                                      uint8_t txLen, uint8_t *rxBuff,
                                      uint8_t rxLen);
 // 写单个寄存器
-static void ads1220_write_reg(ADS1220ObjectType *ads, uint8_t reg, uint8_t value);
+static void ads1220_write_reg(ADS1220ObjectType *ads, uint8_t reg,
+                              uint8_t value);
 // 读单个寄存器
 static uint8_t ads1220_read_reg(ADS1220ObjectType *ads, uint8_t reg);
 
@@ -20,7 +21,6 @@ static uint8_t ads1220_read_reg(ADS1220ObjectType *ads, uint8_t reg);
  * @param ads       ADS1220句柄
  * @param swap      SPI交换数据函数注入
  * @param chipselect SPI片选函数注入，可传NULL（硬件片选）
- * @param isDataReady DRDY引脚读取函数，返回1表示数据就绪
  * @param delayMs   毫秒延时函数注入
  * @param delayUs   微秒延时函数注入
  * @return ADS1220ErrorType 错误码
@@ -28,17 +28,14 @@ static uint8_t ads1220_read_reg(ADS1220ObjectType *ads, uint8_t reg);
 ADS1220ErrorType ADS1220_ObjectInit(ADS1220ObjectType *ads,
                                     ADS1220_SPISwap swap,
                                     ADS1220_SPIChipSelect chipselect,
-                                    ADS1220_IsDataReady isDataReady,
                                     ADS1220_DelayMs delayMs,
                                     ADS1220_DelayUs delayUs) {
-  if (ads == NULL || swap == NULL || isDataReady == NULL || delayMs == NULL ||
-      delayUs == NULL) {
+  if (ads == NULL || swap == NULL || delayMs == NULL || delayUs == NULL) {
     return ADS1220_ERROR_UNKNOWN;
   }
 
   ads->Swap = swap;
   ads->ChipSelect = chipselect; /* 允许NULL（硬件片选） */
-  ads->IsDataReady = isDataReady;
   ads->DelayMs = delayMs;
   ads->DelayUs = delayUs;
   ads->lastError = ADS1220_ERROR_NONE;
@@ -168,8 +165,9 @@ ADS1220ConvStateType ADS1220_ReadDataWithTimeout(ADS1220ObjectType *ads,
   /* 每次轮询约1µs，timeoutMs*1000次 */
   uint32_t tries = timeoutMs * 1000;
   while (tries--) {
-    if (ads->IsDataReady()) {
+    if (ads->drdy) {
       *data = ADS1220_ReadData(ads);
+      ads->drdy = 0;
       return ADS1220_CONV_READY;
     }
   }
@@ -318,7 +316,8 @@ static ADS1220ErrorType ads1220_send_cmd(ADS1220ObjectType *ads, uint8_t cmd) {
   return err;
 }
 
-static void ads1220_write_reg(ADS1220ObjectType *ads, uint8_t reg, uint8_t value) {
+static void ads1220_write_reg(ADS1220ObjectType *ads, uint8_t reg,
+                              uint8_t value) {
   uint8_t cmd[2] = {
       (uint8_t)(ADS1220_CMD_WREG | (reg << 2)),
       value,
@@ -333,7 +332,7 @@ static void ads1220_write_reg(ADS1220ObjectType *ads, uint8_t reg, uint8_t value
 }
 
 static uint8_t ads1220_read_reg(ADS1220ObjectType *ads, uint8_t reg) {
-  uint8_t cmd   = (uint8_t)(ADS1220_CMD_RREG | (reg << 2));
+  uint8_t cmd = (uint8_t)(ADS1220_CMD_RREG | (reg << 2));
   uint8_t value = 0;
   if (ads->ChipSelect)
     ads->ChipSelect(ADS1220_CS_ENABLE);

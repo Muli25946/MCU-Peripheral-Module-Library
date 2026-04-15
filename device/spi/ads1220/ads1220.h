@@ -6,8 +6,8 @@
  *          驱动与平台无关，通过函数指针注入SPI、片选和延时操作。
  * @note
  * 该驱动基于https://github.com/ahhh11111/ADS1220-PT100-STM32/tree/main开发，修改过程可能引入bug,如有错误请以原版为准
- * @version 0.1
- * @date 2026-04-11
+ * @version 0.2
+ * @date 2026-04-15
  *
  * @copyright Copyright (c) 2026
  *
@@ -50,12 +50,12 @@ typedef struct {
 
 /* ADS1220对象 */
 typedef struct {
+  volatile uint8_t drdy; /* ISR置位，驱动层读取后清零 */
   ADS1220ConfigType config;
   /*注入函数*/
   uint8_t (*Swap)(uint8_t *txBuff, uint8_t txLen, uint8_t *rxBuff,
                   uint8_t rxLen);                    /**< SPI交换数据 */
   uint8_t (*ChipSelect)(ADS1220CSEnableType status); /**< SPI片选操作 */
-  uint8_t (*IsDataReady)(void); /**< 读取DRDY引脚（低=就绪） */
   void (*DelayMs)(uint32_t ms); /**< 毫秒延时 */
   void (*DelayUs)(uint32_t us); /**< 微秒延时 */
   /*内部状态*/
@@ -66,7 +66,6 @@ typedef struct {
 typedef uint8_t (*ADS1220_SPISwap)(uint8_t *txBuff, uint8_t txLen,
                                    uint8_t *rxBuff, uint8_t rxLen);
 typedef uint8_t (*ADS1220_SPIChipSelect)(ADS1220CSEnableType status);
-typedef uint8_t (*ADS1220_IsDataReady)(void);
 typedef void (*ADS1220_DelayMs)(uint32_t ms);
 typedef void (*ADS1220_DelayUs)(uint32_t us);
 
@@ -74,7 +73,6 @@ typedef void (*ADS1220_DelayUs)(uint32_t us);
 ADS1220ErrorType ADS1220_ObjectInit(ADS1220ObjectType *ads,
                                     ADS1220_SPISwap swap,
                                     ADS1220_SPIChipSelect chipselect,
-                                    ADS1220_IsDataReady isDataReady,
                                     ADS1220_DelayMs delayMs,
                                     ADS1220_DelayUs delayUs);
 
